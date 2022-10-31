@@ -1,42 +1,39 @@
+import throttle from 'lodash.throttle'
+
+const STORAGE_KEY = "feedback-form-state";
+
+const formData = {};
+
 const refs = {
     form: document.querySelector('form'),
     input: document.querySelector('input'),
     textarea: document.querySelector('textarea'),
 };
 
-// refs.form.addEventListener('submit', onFormSubmit);
-refs.input.addEventListener('input', onEmailInput);
-refs.textarea.addEventListener('input', onTextarealInput);
+populateFormData()
 
-function onEmailInput(event) {
-    const email = event.currentTarget.value;
+refs.form.addEventListener('submit', onFormSubmit);
+refs.form.addEventListener('input', throttle(onFormInput, 500));
 
-    // localStorage.setItem("feedback-form-state", email)
-};
+function onFormInput (event) {
+    formData[event.target.name] = event.target.value;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
+}
 
-function onTextarealInput(event) {
-    const message = event.currentTarget.value;
+function onFormSubmit(event) {
+    event.preventDefault();
+    console.log(formData);
+    event.currentTarget.reset();
+    localStorage.removeItem(STORAGE_KEY);
+}
 
-    // localStorage.setItem("feedback-form-state", message)
-};
+function populateFormData() {
+    const savedInformation = localStorage.getItem(STORAGE_KEY);
 
-
-
-const createFeedback = function (event, onEmailInput, onTextarealInput) {
-    const feedbackFormState = {
-        email: onEmailInput(event),
-        message: onTextarealInput(event),
-    };
-
-    console.log(feedbackFormState);
-
-    localStorage.setItem("feedback-form-state", JSON.stringify(feedbackFormState));
-};
-
-createFeedback();
-
-// function onFormSubmit(event) {
-//     event.preventDefault();
-//     console.log('This is SUBMIT');
-//     event.currentTarget.reset()
-// }
+    if (savedInformation) {
+        const parsedInformation = JSON.parse(savedInformation);
+        refs.input.value = parsedInformation.email;
+        refs.textarea.value = parsedInformation.message;
+        return parsedInformation;
+    }
+}
